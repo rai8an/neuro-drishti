@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEURO-DRISHTI | Edge-CV & Spectral Neuro-Motor Triage (Team JAAZRAI)</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- TOP COMPLIANCE & ARCHITECTURE HEADER -->
+  <header class="top-header">
+    <div class="brand-block">
+      <div class="brand-logo">ND</div>
+      <div class="brand-title">
+        <h1>
+          NEURO-DRISHTI
+          <span class="version-pill">EDGE-CV + DFT v1.2</span>
+        </h1>
+        <p>Offline-First Cranial Nerve Asymmetry, High-Pass Spectral Hand Tremor & Bradykinesia Triage System</p>
+      </div>
+    </div>
+    <div class="meta-badges">
+      <div class="badge">Track: <strong>Hack for Social Cause (VBYLD 2027)</strong></div>
+      <div class="badge">Team: <strong>JAAZRAI</strong></div>
+      <div class="badge">Reg ID: <strong>HSC|AP|00148</strong></div>
+      <div class="badge">State: <strong>Andhra Pradesh (Kurnool / MBU)</strong></div>
+    </div>
+  </header>
+
+  <!-- 3-COLUMN CLINICAL WORKSTATION -->
+  <main class="dashboard-grid">
+
+    <!-- COLUMN 1: LIVE EDGE-CV CAMERA & BRADYKINESIA TAP PAD -->
+    <section class="column-stack">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span id="camStatusDot" class="status-dot"></span>
+            1. Optical Biometric Acquisition (MediaPipe 3D Vision)
+          </div>
+          <span class="card-tag">478 Face + 21 Hand Landmarks</span>
+        </div>
+
+        <div class="viewport-container">
+          <video id="videoElement" autoplay playsinline muted></video>
+          <canvas id="overlayCanvas"></canvas>
+          <div id="viewportPlaceholder" class="viewport-placeholder">
+            <h3 style="margin-bottom:0.4rem; color:#fff;">Edge-CV Optical Sensor Standby</h3>
+            <p style="font-size:0.78rem; color:#94a3b8; max-width:360px;">
+              Click <strong>"Start Live Camera"</strong> and hold your face &amp; hand steady in frame for 3–4 seconds to measure real-time symmetry and high-pass tremor spectra.
+            </p>
+          </div>
+        </div>
+
+        <div class="telemetry-bar">
+          <div class="telemetry-pill">
+            <span>FRAME RATE</span>
+            <strong id="fpsReadout">0 FPS</strong>
+          </div>
+          <div class="telemetry-pill">
+            <span>FACE MESH</span>
+            <strong id="facePtsReadout">0 / 478</strong>
+          </div>
+          <div class="telemetry-pill">
+            <span>HAND NODES</span>
+            <strong id="handPtsReadout">0 / 21</strong>
+          </div>
+          <div class="telemetry-pill">
+            <span>DFT BUFFER</span>
+            <strong id="dftBufferReadout">0 / 128</strong>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button id="btnStartCam" class="btn btn-primary">▶ Start Live Camera</button>
+          <button id="btnToggleMesh" class="btn btn-secondary">👁 Toggle 3D Mesh</button>
+          <button id="btnResetAllSensors" class="btn btn-emerald" title="Clears all recorded buffers to zero for a fresh live scan">
+            🔄 Reset All Sensors
+          </button>
+        </div>
+      </div>
+
+      <!-- MODULE C INPUT: RAPID FINGER-TAP BRADYKINESIA ARENA -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span id="tapStatusDot" class="status-dot"></span>
+            2. Motor-Cortex Bradykinesia Tap Sensor (10s Test)
+          </div>
+          <span class="card-tag">Tap &amp; Release (Do Not Hold)</span>
+        </div>
+
+        <div class="tap-arena">
+          <button id="tapPadBtn" class="tap-pad-btn">
+            <span id="tapPadMainText">CLICK &amp; RELEASE RAPIDLY (OR TAP SPACEBAR)</span>
+            <small id="tapPadSubText">Tap and release repeatedly for 10 seconds — Do NOT hold the button down</small>
+          </button>
+          <div class="btn-row" style="margin-top:0.2rem;">
+            <button id="btnResetTap" class="btn btn-secondary">↺ Reset 10s Motor Test</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COLUMN 2: DETERMINISTIC MATHEMATICAL BIOMETRICS (3 ENGINES) -->
+    <section class="column-stack">
+
+      <!-- ENGINE A: CRANIAL NERVE VII FACIAL & OCULAR SYMMETRY -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">A. Cranial Nerve VII &amp; Ocular Symmetry (Stroke / Palsy Triage)</div>
+          <span id="cn7StatusBadge" class="card-tag">Awaiting Face</span>
+        </div>
+        <div class="metrics-grid-3">
+          <div class="metric-box">
+            <div class="metric-label">Oral Commissure Droop</div>
+            <div id="valMouthAsym" class="metric-val">-- mm</div>
+            <div class="metric-sub">Normal: &lt; 2.2 mm</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Palpebral Eye Ratio</div>
+            <div id="valEyeRatio" class="metric-val">--</div>
+            <div class="metric-sub">Normal: 0.90–1.10</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Facial Symmetry Index</div>
+            <div id="valSymmetryIdx" class="metric-val">-- %</div>
+            <div class="metric-sub">Normal: &gt; 91.0%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ENGINE B: SPECTRAL HAND TREMOR (HIGH-PASS 128-POINT DFT) -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">B. High-Pass Spectral Hand Tremor Analyzer (128-Pt DFT)</div>
+          <span id="tremorStatusBadge" class="card-tag">Awaiting Steady Hand</span>
+        </div>
+        <div class="metrics-grid-3">
+          <div class="metric-box">
+            <div class="metric-label">Dominant Tremor Freq</div>
+            <div id="valPeakHz" class="metric-val">-- Hz</div>
+            <div class="metric-sub">PD Band: 4.0–6.5 Hz</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">High-Pass RMS Amp</div>
+            <div id="valTremorAmp" class="metric-val">-- mm</div>
+            <div class="metric-sub">Normal Steady: &lt; 0.85 mm</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">PD Band Power Ratio</div>
+            <div id="valPdRatio" class="metric-val">-- %</div>
+            <div class="metric-sub">4–6.5 Hz Spectral Share</div>
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="tremorChart"></canvas>
+        </div>
+      </div>
+
+      <!-- ENGINE C: BRADYKINESIA LINEAR REGRESSION FATIGUE -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">C. Bradykinesia Motor Latency &amp; Fatigue (OLS Regression)</div>
+          <span id="tapStatusBadge" class="card-tag">0 Taps Recorded</span>
+        </div>
+        <div class="metrics-grid-3">
+          <div class="metric-box">
+            <div class="metric-label">Mean Inter-Tap (ITI)</div>
+            <div id="valMeanIti" class="metric-val">-- ms</div>
+            <div class="metric-sub">Normal: 110–250 ms</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Fatigue Slope (ΔITI)</div>
+            <div id="valFatigueSlope" class="metric-val">-- ms/tap</div>
+            <div class="metric-sub">Normal: &lt; +2.5 ms/tap</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Rhythm Consistency (CV)</div>
+            <div id="valTapCv" class="metric-val">-- %</div>
+            <div class="metric-sub">Normal: &lt; 18.0%</div>
+          </div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="tapChart"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- COLUMN 3: CLINICAL DECISION SUPPORT & GIS REFERRAL ENGINE -->
+    <section class="column-stack">
+      <div class="card" style="flex:1; display:flex; flex-direction:column;">
+        <div class="card-header">
+          <div class="card-title">3. PHC Clinical Triage &amp; GISE Spatial Referral</div>
+          <span class="card-tag">Gemini 2.5 Flash + CDSS</span>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="patientName">Beneficiary Name / Age</label>
+            <input id="patientName" type="text" class="input-field" value="Subject-01 (24M)" />
+          </div>
+          <div class="form-group">
+            <label for="phcLocation">Origin PHC / Mandal (Andhra Pradesh)</label>
+            <input id="phcLocation" type="text" class="input-field" value="Yemmiganur Rural PHC" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="ashaNotes">Field Clinical Notes / Presenting Symptoms</label>
+          <input id="ashaNotes" type="text" class="input-field" value="Routine community neuro-motor screening at Primary Health Centre." />
+        </div>
+
+        <div class="form-group">
+          <label for="geminiApiKey">Google AI Studio Key (gemini-2.5-flash) — Optional (Offline CDSS Active)</label>
+          <input id="geminiApiKey" type="password" class="input-field" placeholder="Paste AIzaSy... key here (optional)" />
+        </div>
+
+        <div class="btn-row" style="margin-bottom:0.75rem;">
+          <button id="btnGenerateTriage" class="btn btn-primary">🩺 Synthesize PHC Clinical Report</button>
+        </div>
+
+        <!-- CLINICAL OUTPUT BOX -->
+        <div id="clinicalReportBox" class="clinical-report">
+          <div class="triage-banner triage-green" id="triageBanner">
+            <span>TRIAGE STATUS: READY FOR LIVE SCAN</span>
+            <span>NPCDCS PROTOCOL v2.8</span>
+          </div>
+          <div id="clinicalReportContent" style="color:#cbd5e1;">
+            <p><strong>How to Run an Accurate Live Screening:</strong></p>
+            <ol style="margin-left:1.2rem; margin-top:0.4rem; display:flex; flex-direction:column; gap:0.35rem;">
+              <li><strong>Live Face &amp; Hand Scan:</strong> Click <em>"Start Live Camera"</em>, look straight at the webcam, and hold one open hand steady in view for 4 seconds. (Slow arm motion is automatically filtered out).</li>
+              <li><strong>10s Rapid Tap Test:</strong> Click and release the <em>Motor Pad</em> (or tap and release Spacebar) rapidly for 10 seconds. <strong>Do not hold the key down continuously.</strong></li>
+              <li><strong>Generate Triage:</strong> Click <em>"Synthesize PHC Clinical Report"</em> to compute your true risk tier and GISE hospital route.</li>
+            </ol>
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:auto; padding-top:0.75rem;">
+          <button id="btnSpeakEnglish" class="btn btn-emerald">🔊 Speak Clinical Summary</button>
+          <button id="btnCopyJsonReport" class="btn btn-secondary">📋 Copy FHIR JSON</button>
+          <button id="btnPrintReport" class="btn btn-secondary">🖨 Print Clean PHC Slip</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer-bar">
+    NEURO-DRISHTI Open-Source Clinical Prototype (MIT License) • Built by <strong>Team JAAZRAI (muhammad raihan shaik &amp; Azhar shaik)</strong> • Registration ID: <strong>HSC|AP|00148</strong> • Mohan Babu University, Andhra Pradesh
+  </footer>
+
+  <script src="biometrics.js" defer></script>
+  <script src="clinical-ai.js" defer></script>
+
+  <!-- BUNDLE 1 CORE: MEDIAPIPE 3D VISION & REAL-TIME CANVAS ENGINE -->
+  <script type="module">
+    import {
+      FilesetResolver,
+      FaceLandmarker,
+      HandLandmarker
+    } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+
+    window.NeuroDrishtiState = {
+      isCameraRunning: false,
+      showMesh: true,
+      fps: 0,
+      faceLandmarks: null,
+      handLandmarks: null,
+      latestMetrics: {
+        mouthAsymMm: 0,
+        eyeRatio: 1.0,
+        symmetryIndex: 98.5,
+        cn7Flag: "Normal Symmetry",
+        peakHz: 0,
+        tremorAmpMm: 0,
+        pdBandRatio: 0,
+        tremorFlag: "Physiological / Normal",
+        meanItiMs: 0,
+        fatigueSlope: 0,
+        tapCvPercent: 0,
+        tapCount: 0,
+        tapFlag: "Normal Motor Rhythm"
+      }
+    };
+
+    const video = document.getElementById("videoElement");
+    const canvas = document.getElementById("overlayCanvas");
+    const ctx = canvas.getContext("2d");
+    const placeholder = document.getElementById("viewportPlaceholder");
+    const camStatusDot = document.getElementById("camStatusDot");
+    const fpsReadout = document.getElementById("fpsReadout");
+    const facePtsReadout = document.getElementById("facePtsReadout");
+    const handPtsReadout = document.getElementById("handPtsReadout");
+
+    let faceLandmarker = null;
+    let handLandmarker = null;
+    let lastFrameTime = performance.now();
+    let frameCounter = 0;
+    let fpsTimer = performance.now();
+
+    async function initMediaPipeVision() {
+      const btnStart = document.getElementById("btnStartCam");
+      btnStart.textContent = "⏳ Loading 3D Vision WASM...";
+      btnStart.disabled = true;
+
+      try {
+        const vision = await FilesetResolver.forVisionTasks(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+        );
+
+        faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath:
+              "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+            delegate: "GPU"
+          },
+          outputFaceBlendshapes: false,
+          runningMode: "VIDEO",
+          numFaces: 1
+        });
+
+        handLandmarker = await HandLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath:
+              "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+            delegate: "GPU"
+          },
+          runningMode: "VIDEO",
+          numHands: 1
+        });
+
+        btnStart.textContent = "▶ Start Live Camera";
+        btnStart.disabled = false;
+      } catch (err) {
+        console.error("MediaPipe initialization error:", err);
+        btnStart.textContent = "⚠ Retry Vision Init";
+        btnStart.disabled = false;
+      }
+    }
+
+    async function startCamera() {
+      if (!faceLandmarker || !handLandmarker) {
+        await initMediaPipeVision();
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+          audio: false
+        });
+        video.srcObject = stream;
+        await video.play();
+
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        placeholder.classList.add("hidden");
+        camStatusDot.classList.add("active");
+        window.NeuroDrishtiState.isCameraRunning = true;
+        document.getElementById("btnStartCam").textContent = "🟢 Camera Active (30 FPS)";
+
+        requestAnimationFrame(processVideoFrame);
+      } catch (err) {
+        alert("Camera access error: Please allow webcam permission in your browser.");
+        console.error(err);
+      }
+    }
+
+    function drawClinicalMesh(faceLandmarks, handLandmarks) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!window.NeuroDrishtiState.showMesh) return;
+
+      const w = canvas.width;
+      const h = canvas.height;
+
+      if (faceLandmarks && faceLandmarks.length > 0) {
+        const lm = faceLandmarks[0];
+        ctx.fillStyle = "rgba(6, 182, 212, 0.32)";
+        for (let i = 0; i < lm.length; i += 2) {
+          ctx.fillRect(lm[i].x * w, lm[i].y * h, 1.5, 1.5);
+        }
+
+        const keyIndices = [61, 291, 159, 145, 386, 374, 168, 2];
+        ctx.fillStyle = "#10b981";
+        keyIndices.forEach((idx) => {
+          const pt = lm[idx];
+          if (pt) {
+            ctx.beginPath();
+            ctx.arc(pt.x * w, pt.y * h, 4, 0, 2 * Math.PI);
+            ctx.fill();
+          }
+        });
+
+        if (lm[61] && lm[291]) {
+          ctx.strokeStyle = "#f59e0b";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(lm[61].x * w, lm[61].y * h);
+          ctx.lineTo(lm[291].x * w, lm[291].y * h);
+          ctx.stroke();
+        }
+      }
+
+      if (handLandmarks && handLandmarks.length > 0) {
+        const hlm = handLandmarks[0];
+        const connections = [
+          [0,1],[1,2],[2,3],[3,4],
+          [0,5],[5,6],[6,7],[7,8],
+          [0,9],[9,10],[10,11],[11,12],
+          [0,13],[13,14],[14,15],[15,16],
+          [0,17],[17,18],[18,19],[19,20]
+        ];
+
+        ctx.strokeStyle = "#3b82f6";
+        ctx.lineWidth = 2.2;
+        connections.forEach(([a, b]) => {
+          ctx.beginPath();
+          ctx.moveTo(hlm[a].x * w, hlm[a].y * h);
+          ctx.lineTo(hlm[b].x * w, hlm[b].y * h);
+          ctx.stroke();
+        });
+
+        hlm.forEach((pt, idx) => {
+          ctx.fillStyle = idx === 8 ? "#f43f5e" : "#38bdf8";
+          ctx.beginPath();
+          ctx.arc(pt.x * w, pt.y * h, idx === 8 ? 5.5 : 3.5, 0, 2 * Math.PI);
+          ctx.fill();
+        });
+      }
+    }
+
+    function processVideoFrame() {
+      if (!window.NeuroDrishtiState.isCameraRunning) return;
+
+      const nowMs = performance.now();
+      frameCounter++;
+      if (nowMs - fpsTimer >= 500) {
+        const currentFps = Math.round((frameCounter * 1000) / (nowMs - fpsTimer));
+        window.NeuroDrishtiState.fps = currentFps;
+        fpsReadout.textContent = `${currentFps} FPS`;
+        frameCounter = 0;
+        fpsTimer = nowMs;
+      }
+
+      if (video.readyState >= 2 && nowMs > lastFrameTime) {
+        lastFrameTime = nowMs;
+        const faceRes = faceLandmarker ? faceLandmarker.detectForVideo(video, nowMs) : null;
+        const handRes = handLandmarker ? handLandmarker.detectForVideo(video, nowMs) : null;
+
+        const fLandmarks = faceRes?.faceLandmarks || [];
+        const hLandmarks = handRes?.landmarks || [];
+
+        window.NeuroDrishtiState.faceLandmarks = fLandmarks;
+        window.NeuroDrishtiState.handLandmarks = hLandmarks;
+
+        facePtsReadout.textContent = fLandmarks.length > 0 ? "478 / 478" : "0 / 478";
+        handPtsReadout.textContent = hLandmarks.length > 0 ? "21 / 21" : "0 / 21";
+
+        drawClinicalMesh(fLandmarks, hLandmarks);
+
+        if (typeof window.updateBiometricsFromVision === "function") {
+          window.updateBiometricsFromVision(fLandmarks, hLandmarks, nowMs);
+        }
+      }
+
+      requestAnimationFrame(processVideoFrame);
+    }
+
+    document.getElementById("btnStartCam").addEventListener("click", startCamera);
+    document.getElementById("btnToggleMesh").addEventListener("click", () => {
+      window.NeuroDrishtiState.showMesh = !window.NeuroDrishtiState.showMesh;
+    });
+
+    initMediaPipeVision();
+  </script>
+</body>
+</html>
